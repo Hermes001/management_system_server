@@ -1,4 +1,9 @@
 /target
+<<<<<<< HEAD
 .vscode/launch.json
 Cargo.lock
 .idea
+=======
+.idea
+/Cargo.lock
+>>>>>>> b6f927e0b194c5fd0f473b07e8a415bd797bdd75
