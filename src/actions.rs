@@ -3,19 +3,19 @@ use uuid::Uuid;
 
 use crate::models;
 
-// pub fn find_user_by_id(
-//     uid: Uuid,
-//     conn: &PgConnection,
-// ) -> Result<Option<models::User>, diesel::result::Error> {
-//     use crate::schema::users::dsl::*;
+pub fn find_user_by_id(
+    uid: String,
+    conn: &PgConnection,
+) -> Result<Option<models::User>, diesel::result::Error> {
+    use crate::schema::users::dsl::*;
 
-//     let user = users
-//         .filter(id.eq(uid.to_string()))
-//         .first::<models::User>(conn)
-//         .optional()?;
+    let user = users
+        .filter(id.eq(uid))
+        .first::<models::User>(conn)
+        .optional()?;
 
-//     Ok(user)
-// }
+    Ok(user)
+}
 
 pub fn insert_new_user(
     np: &str,
