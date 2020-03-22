@@ -4,13 +4,13 @@ use uuid::Uuid;
 use crate::models;
 
 pub fn find_user_by_id(
-    uid: String,
+    uid: Uuid,
     conn: &PgConnection,
 ) -> Result<Option<models::User>, diesel::result::Error> {
     use crate::schema::users::dsl::*;
 
     let user = users
-        .filter(id.eq(uid))
+        .filter(id.eq(uid.to_string()))
         .first::<models::User>(conn)
         .optional()?;
 
