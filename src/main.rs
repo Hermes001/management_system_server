@@ -1,15 +1,14 @@
 #[macro_use]
 extern crate diesel;
 
-// use crate::models::User;
-use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer};
+use actix_web::{App, HttpServer};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use std::env;
-use uuid::Uuid;
 
 mod actions;
 mod models;
+mod resp;
 mod schema;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
@@ -22,52 +21,13 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(add_user)
-            .service(get_user)
+            .service(resp::login)
+            .service(resp::add_user)
+            .service(resp::get_user)
     })
     .bind(&bind)?
     .run()
     .await
-}
-
-#[get("/user/query/{user_id}")]
-async fn get_user(
-    pool: web::Data<DbPool>,
-    user_uid: web::Path<Uuid>,
-) -> Result<HttpResponse, Error> {
-    let user_uid = user_uid.into_inner();
-    let conn = pool.get().expect("couldn't get db connection from pool");
-
-    // use web::block to offload blocking Diesel code without blocking server thread
-    let user = web::block(move || actions::find_user_by_id(user_uid, &conn))
-        .await
-        .map_err(|e| {
-            eprintln!("{}", e);
-            HttpResponse::InternalServerError().finish()
-        })?;
-
-    if let Some(user) = user {
-        Ok(HttpResponse::Ok().json(user))
-    } else {
-        let res = HttpResponse::NotFound().body(format!("No user found with uid: {}", user_uid));
-        Ok(res)
-    }
-}
-
-#[post("/user/add")]
-async fn add_user(
-    pool: web::Data<DbPool>,
-    user: web::Json<models::User>,
-) -> Result<HttpResponse, Error> {
-    let conn = pool.get().expect("couldn't get db connection from pool");
-
-    let user = web::block(move || actions::insert_new_user(&user.user_name, &user.password, &conn))
-        .await
-        .map_err(|e| {
-            eprintln!("{}", e);
-            HttpResponse::InternalServerError().finish();
-        })?;
-    Ok(HttpResponse::Ok().json(user))
 }
 
 fn establish_connection() -> DbPool {

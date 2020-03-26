@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::models;
 
 pub fn find_user_by_id(
-    uid: Uuid,
+    uid: &str,
     conn: &PgConnection,
 ) -> Result<Option<models::User>, diesel::result::Error> {
     use crate::schema::users::dsl::*;
@@ -30,7 +30,22 @@ pub fn insert_new_user(
         password: pd.to_owned(),
     };
 
-    diesel::insert_into(users).values(&new_user).execute(conn)?;
+    diesel::insert_into(users).values(&new_user).execute(conn);
 
     Ok(new_user)
+}
+
+pub fn check_user(
+    name: &str,
+    pwd: &str,
+    conn: &PgConnection,
+) -> Result<Option<models::User>, diesel::result::Error> {
+    use crate::schema::users::dsl::*;
+    let user = users
+        .filter(user_name.eq(name))
+        .filter(password.eq(pwd))
+        .first::<models::User>(conn)
+        .optional()?;
+
+    Ok(user)
 }
