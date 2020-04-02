@@ -69,3 +69,23 @@ pub async fn add_user(
             })?;
     Ok(HttpResponse::Ok().json("添加成功"))
 }
+
+#[post("/stock/query_all")]
+pub async fn get_stock(
+    pool: web::Data<r2d2::Pool<ConnectionManager<PgConnection>>>,
+) -> Result<HttpResponse, Error> {
+    let conn = pool.get().expect("couldn't get db connection from pool");
+
+    let stock = web::block(move || actions::query_stock(&conn))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish();
+        })?;
+    if let Some(stock) = stock {
+        Ok(HttpResponse::Ok().json(stock))
+    } else {
+        let res = HttpResponse::NotFound().body(format!("找不到用户"));
+        Ok(res)
+    }
+}

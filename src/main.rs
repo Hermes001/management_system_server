@@ -22,6 +22,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(pool.clone())
             .service(resp::login)
+            .service(resp::get_stock)
             .service(resp::add_user)
             .service(resp::get_user)
     })
@@ -33,7 +34,7 @@ async fn main() -> std::io::Result<()> {
 fn establish_connection() -> DbPool {
     dotenv::dotenv().ok();
 
-    let database_url = env::var("PG_DATABASE_URL").expect("PG_DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     r2d2::Pool::builder()
         .build(manager)
