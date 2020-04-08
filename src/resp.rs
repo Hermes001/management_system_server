@@ -13,7 +13,7 @@ pub async fn login(
     let conn = pool.get().expect("couldn't get db connection from pool");
 
     let user =
-        web::block(move || actions::check_user(&form["user_name"], &form["password"], &conn))
+        web::block(move || actions::check_user(&conn, &form["user_name"], &form["password"]))
             .await
             .map_err(|e| {
                 eprint!("{}", e);
@@ -37,7 +37,7 @@ pub async fn get_user(
     let conn = pool.get().expect("couldn't get db connection from pool");
 
     // use web::block to offload blocking Diesel code without blocking server thread
-    let user = web::block(move || actions::find_user_by_id(&form["id"], &conn))
+    let user = web::block(move || actions::find_user_by_id(&conn, &form["id"]))
         .await
         .map_err(|e| {
             eprintln!("{}", e);
@@ -60,13 +60,12 @@ pub async fn add_user(
     let form = form.into_inner();
     let conn = pool.get().expect("couldn't get db connection from pool");
 
-    let _ =
-        web::block(move || actions::insert_new_user(&form["user_name"], &form["password"], &conn))
-            .await
-            .map_err(|e| {
-                eprintln!("{}", e);
-                HttpResponse::InternalServerError().finish();
-            })?;
+    let _ = web::block(move || actions::add_user(&conn, &form["user_name"], &form["password"]))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish();
+        })?;
     Ok(HttpResponse::Ok().json("添加成功"))
 }
 
